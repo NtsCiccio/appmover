@@ -23,10 +23,14 @@
   #define MyAppVersion "0.0.0-dev"
 #endif
 #define MyAppExeName "appmover.exe"
-#define MyAppId "{6FEAD021-D263-40CC-A110-84CB573446E1}"
 
 [Setup]
-AppId={#MyAppId}
+; {{GUID} is Inno Setup's documented literal-brace syntax for a fixed
+; AppId — the leading "{{" is the compiler's escape for a literal "{"
+; (not the preprocessor: a value substituted via #define would still be
+; re-parsed as a "{constant}" reference and fail with "unknown
+; constant", which is exactly what happened before this comment existed).
+AppId={{6FEAD021-D263-40CC-A110-84CB573446E1}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 DefaultDirName={localappdata}\Programs\{#MyAppName}
