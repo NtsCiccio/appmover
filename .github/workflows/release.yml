@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  portable:
+    name: Build portable exe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - name: Build
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: go build -ldflags="-H=windowsgui" -o AppMover-portable.exe ./cmd/appmover
+      - name: Checksum
+        run: sha256sum AppMover-portable.exe > AppMover-portable.exe.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: portable
+          path: |
+            AppMover-portable.exe
+            AppMover-portable.exe.sha256
+
+  installer:
+    name: Build Inno Setup installer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - name: Determine version
+        id: version
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - name: Build
+        run: go build -ldflags="-H=windowsgui" -o dist\appmover.exe .\cmd\appmover
+      - uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          path: installer/appmover.iss
+          options: /DMyAppVersion=${{ steps.version.outputs.version }}
+      - name: Checksum
+        shell: bash
+        run: sha256sum installer/output/AppMover-Setup.exe > installer/output/AppMover-Setup.exe.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: |
+            installer/output/AppMover-Setup.exe
+            installer/output/AppMover-Setup.exe.sha256
+
+  publish:
+    name: Publish GitHub release
+    needs: [portable, installer]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
