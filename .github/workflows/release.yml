@@ -42,7 +42,7 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
       - name: Build
         run: go build -ldflags="-H=windowsgui" -o dist\appmover.exe .\cmd\appmover
-      - uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+      - uses: Minionguyjpro/Inno-Setup-Action@v1.2.9
         with:
           path: installer/appmover.iss
           options: /DMyAppVersion=${{ steps.version.outputs.version }}

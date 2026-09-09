@@ -23,10 +23,10 @@
   #define MyAppVersion "0.0.0-dev"
 #endif
 #define MyAppExeName "appmover.exe"
-#define MyAppId "6FEAD021-D263-40CC-A110-84CB573446E1"
+#define MyAppId "{6FEAD021-D263-40CC-A110-84CB573446E1}"
 
 [Setup]
-AppId={{#MyAppId}
+AppId={#MyAppId}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 DefaultDirName={localappdata}\Programs\{#MyAppName}
