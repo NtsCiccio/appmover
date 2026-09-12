@@ -1,41 +1,60 @@
-# AppMover
+<div align="center">
 
-A lightweight Windows system tray utility to move open application windows
-between monitors.
+# 🪟 AppMover
 
-AppMover sits in the system tray and lists the currently open windows. For
-each window you can pick a target monitor from a submenu; the window is
-moved there, centered in the usable work area (taskbar excluded), and its
-maximized/restored state is preserved. The menu refreshes itself as windows
-open/close/change title, and updates immediately when you plug/unplug a
-monitor.
+**Move windows between monitors in one click, right from the system tray.**
+
+[![CI](https://github.com/NtsCiccio/appmover/actions/workflows/ci.yml/badge.svg)](https://github.com/NtsCiccio/appmover/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/NtsCiccio/appmover?label=release)](https://github.com/NtsCiccio/appmover/releases/latest)
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
+[![Go](https://img.shields.io/badge/Go-1.27%2B-00ADD8?logo=go&logoColor=white)](go.mod)
+[![Windows](https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white)](#requirements)
+
+</div>
+
+AppMover sits quietly in the system tray and lists your open windows. Pick
+one, pick a monitor from the submenu, and it's moved there — centered in
+the usable work area (taskbar excluded), with its maximized/restored state
+preserved. No dragging across screens, no admin rights, no bloat.
+
+## Contents
+
+- [Features](#features)
+- [Download](#download)
+- [Configuration](#configuration)
+- [Building from source](#building-from-source)
+- [Project layout](#project-layout)
+- [Testing](#testing)
+- [Logging](#logging)
+- [License](#license)
 
 ## Features
 
-- **Global hotkeys** — `Win+Shift+Right` / `Win+Shift+Left` move the
-  currently focused window to the next/previous monitor without opening
-  the tray menu. Configurable, see [Configuration](#configuration).
-- **"Last used monitor" memory** — the submenu entry an app was last moved
-  to is shown checked, per app (matched by executable name), so you can
-  see at a glance where something usually goes. This is purely
-  informational: AppMover never moves a window on its own.
-- **Start with Windows** — a checkbox in the tray menu toggles autostart
-  via the per-user registry Run key (no admin rights needed).
-- **Cloaked/UWP window filtering** — windows DWM has hidden from the
-  screen (common for suspended/background UWP frame windows on Windows
-  10/11) are not listed, even though Win32 still reports them as
-  `WS_VISIBLE`.
-- **Virtual desktop awareness** — windows that aren't on the currently
-  active virtual desktop are filtered out, via the public
-  `IVirtualDesktopManager` COM interface.
-- **Per-monitor DPI awareness** — AppMover declares Per-Monitor-V2 DPI
-  awareness so window positions/sizes are computed in real physical
-  pixels on mixed-DPI multi-monitor setups, with a size-scaling fallback
-  for target windows that aren't themselves DPI-aware.
-- **Event-driven refresh** — the window list updates via
-  `SetWinEventHook`/`WM_DISPLAYCHANGE` rather than blind polling; a much
-  longer interval poll (configurable, default 10s) remains only as a
-  safety net.
+| | |
+|---|---|
+| ⌨️ **Global hotkeys** | `Win+Shift+Right` / `Win+Shift+Left` move the focused window to the next/previous monitor without opening the tray menu. Configurable — see [Configuration](#configuration). |
+| 🧠 **"Last used monitor" memory** | The submenu entry an app was last moved to is shown checked, per app (matched by executable name), so you can see at a glance where something usually goes. Purely informational — AppMover never moves a window on its own. |
+| 🚀 **Start with Windows** | A checkbox in the tray menu toggles autostart via the per-user registry Run key. No admin rights needed. |
+| 👻 **Cloaked/UWP filtering** | Windows DWM has hidden from the screen (common for suspended/background UWP frame windows on Windows 10/11) are not listed, even though Win32 still reports them as `WS_VISIBLE`. |
+| 🖥️ **Virtual desktop awareness** | Windows that aren't on the currently active virtual desktop are filtered out, via the public `IVirtualDesktopManager` COM interface. |
+| 🔍 **Per-monitor DPI awareness** | AppMover declares Per-Monitor-V2 DPI awareness, so positions/sizes are computed in real physical pixels on mixed-DPI multi-monitor setups, with a size-scaling fallback for windows that aren't DPI-aware themselves. |
+| ⚡ **Event-driven refresh** | The window list updates via `SetWinEventHook`/`WM_DISPLAYCHANGE` rather than blind polling; a much longer poll (configurable, default 10s) remains only as a safety net. |
+
+## Download
+
+Grab the latest release from the [Releases page](https://github.com/NtsCiccio/appmover/releases/latest):
+
+- **`AppMover-Setup.exe`** *(recommended)* — an [Inno Setup](https://jrsoftware.org/isinfo.php)
+  installer that installs per-user to `%LocalAppData%\Programs\AppMover` —
+  no admin rights, no UAC prompt — with a Start Menu entry, an optional
+  desktop shortcut, and a proper uninstaller. It deliberately doesn't offer
+  its own "start with Windows" option: use the one already in AppMover's
+  tray menu instead, so there's only one place that toggles autostart.
+- **`AppMover-portable.exe`** — the plain binary, run from anywhere,
+  nothing installed.
+
+Every `v*` tag produces both artifacts automatically
+(`.github/workflows/release.yml`).
 
 ## Requirements
 
@@ -43,7 +62,7 @@ monitor.
   `GOOS=windows`)
 - Go 1.27+ to build from source
 
-## Building
+## Building from source
 
 The project has no cgo dependencies, so it cross-compiles cleanly from any
 platform, e.g. from macOS or Linux:
@@ -62,41 +81,30 @@ go build -o appmover.exe ./cmd/appmover
 .\appmover.exe
 ```
 
-## Releases
+### Building the installer
 
-Every `v*` tag produces two artifacts (`.github/workflows/release.yml`):
+`AppMover-Setup.exe` is built with [Inno Setup](https://jrsoftware.org/isinfo.php)
+(`installer/appmover.iss`). To build it locally you need Windows and
+Inno Setup's [`ISCC.exe`](https://jrsoftware.org/isdl.php) — it's not
+something that can be produced by cross-compiling from macOS/Linux:
 
-- **`AppMover-portable.exe`** — the plain binary from the build step above,
-  run from anywhere, nothing installed.
-- **`AppMover-Setup.exe`** — an [Inno Setup](https://jrsoftware.org/isinfo.php)
-  installer (`installer/appmover.iss`) that installs per-user to
-  `%LocalAppData%\Programs\AppMover` — no admin rights, no UAC prompt —
-  with a Start Menu entry, an optional desktop shortcut, and a proper
-  uninstaller. It deliberately doesn't offer its own "start with Windows"
-  option: use the one already in AppMover's tray menu instead, so there's
-  only one place that toggles autostart.
+```powershell
+go build -ldflags="-H=windowsgui" -o dist\appmover.exe .\cmd\appmover
+iscc installer\appmover.iss
+```
 
-  To build the installer locally you need Windows and
-  [Inno Setup](https://jrsoftware.org/isdl.php) (`ISCC.exe`); it's not
-  something that can be produced by cross-compiling from macOS/Linux:
-
-  ```powershell
-  go build -ldflags="-H=windowsgui" -o dist\appmover.exe .\cmd\appmover
-  iscc installer\appmover.iss
-  ```
-
-We looked at [Velopack](https://velopack.io/) (a newer installer/auto-update
-framework) as an alternative, but its `vpk` CLI requires the full .NET SDK
-to run regardless of the target app's language — a disproportionate
-toolchain addition for a project that otherwise builds with nothing but
-`go build`. Inno Setup is a single small compiler binary, has no runtime
-dependency, and is the long-established standard for exactly this kind of
-small Windows utility.
+> [!NOTE]
+> We looked at [Velopack](https://velopack.io/) (a newer installer/auto-update
+> framework) as an alternative, but its `vpk` CLI requires the full .NET SDK
+> regardless of the target app's language — a disproportionate toolchain
+> addition for a project that otherwise builds with nothing but `go build`.
+> Inno Setup is a single small compiler binary, has no runtime dependency,
+> and is the long-established standard for this kind of small Windows utility.
 
 ## Configuration
 
 On first run AppMover creates a config file at
-`%AppData%\AppMover\config.json` with defaults:
+`%AppData%\AppMover\config.json` with these defaults:
 
 ```json
 {
@@ -109,24 +117,24 @@ On first run AppMover creates a config file at
 }
 ```
 
-- `refreshIntervalMs` — the safety-net poll interval; the menu also
-  refreshes immediately on real window/display changes regardless of this
-  value.
-- `moveNextMonitorHotkey` / `movePrevMonitorHotkey` — `modifier+...+key`,
-  where modifiers are any of `win`/`ctrl`/`alt`/`shift` and the key is an
-  arrow (`left`/`right`/`up`/`down`) or a single letter/digit.
-- `maxWindowSlots` — how many window entries the tray menu pre-allocates;
-  beyond that, a trailing "+N more windows not shown" entry appears
-  instead of silently truncating the list.
-- `excludedProcessNames` / `excludedTitles` — case-insensitive substring
-  filters (e.g. `"excludedProcessNames": ["chrome.exe"]`).
+| Key | Description |
+|---|---|
+| `refreshIntervalMs` | The safety-net poll interval; the menu also refreshes immediately on real window/display changes regardless of this value. |
+| `moveNextMonitorHotkey` / `movePrevMonitorHotkey` | `modifier+...+key`, where modifiers are any of `win`/`ctrl`/`alt`/`shift` and the key is an arrow (`left`/`right`/`up`/`down`) or a single letter/digit. |
+| `maxWindowSlots` | How many window entries the tray menu pre-allocates; beyond that, a trailing "+N more windows not shown" entry appears instead of silently truncating the list. |
+| `excludedProcessNames` / `excludedTitles` | Case-insensitive substring filters, e.g. `"excludedProcessNames": ["chrome.exe"]`. |
 
 Edit the file and restart AppMover to apply changes. Per-app "last used
 monitor" memory is stored separately at `%AppData%\AppMover\state.json`.
 
 ## Project layout
 
-- `cmd/appmover` — application entry point; sets process DPI awareness
+- `cmd/appmover` — application entry point; sets process DPI awareness.
+  `rsrc_windows_amd64.syso` (generated, checked in) embeds `icon.ico` as the
+  exe's own Windows resource, so the file icon shown by Explorer, the
+  taskbar, shortcuts, and the installer/uninstaller entry all match the
+  tray icon. Regenerate it after changing the icon with:
+  `go run github.com/tc-hib/go-winres@latest simply --icon internal/tray/icon.ico --arch amd64 --manifest none --file-description "AppMover" --product-name "AppMover" --out cmd/appmover/rsrc`
 - `internal/tray` — system tray icon, menu, refresh, and wiring for
   hotkeys/autostart/state
 - `internal/win32` — thin wrappers around the Win32 APIs
@@ -148,7 +156,7 @@ monitor" memory is stored separately at `%AppData%\AppMover\state.json`.
   settings/memory persistence and the rotating debug log, pure Go, no
   Win32 dependency
 - `installer/appmover.iss` — Inno Setup script for `AppMover-Setup.exe`
-  (see [Releases](#releases))
+  (see [Download](#download))
 
 ## Testing
 
