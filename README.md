@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🪟 AppMover
+<img src=".github/icon.png" alt="AppMover icon" width="72" height="72">
+
+# AppMover
 
 **Move windows between monitors in one click, right from the system tray.**
 
