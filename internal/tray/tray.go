@@ -126,7 +126,7 @@ func OnReady() {
 
 	systray.SetIcon(iconData)
 	systray.SetTitle("AppMover")
-	systray.SetTooltip("Move apps between monitors")
+	systray.SetTooltip(tooltipText())
 
 	mu.Lock()
 	monitors = win32.EnumMonitors()
@@ -188,6 +188,16 @@ func OnExit() {
 			logInfo("state.Save: %v", err)
 		}
 	}
+}
+
+// tooltipText is the tray icon's hover text: the version when it's known
+// (a real tagged build), or just the plain description for a "dev" build
+// (see internal/version).
+func tooltipText() string {
+	if version.Version == "" || version.Version == "dev" {
+		return "Move apps between monitors"
+	}
+	return fmt.Sprintf("Move apps between monitors (v%s)", version.Version)
 }
 
 func computeMonitorLabels(monitors []win32.Monitor) []string {

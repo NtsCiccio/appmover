@@ -170,11 +170,11 @@ monitor" memory is stored separately at `%AppData%\AppMover\state.json`.
 ## Testing
 
 Packages with no Win32 dependency (`internal/layout`, `internal/config`,
-`internal/state`, `internal/applog`) have real unit tests that run on any
-platform:
+`internal/state`, `internal/applog`, `internal/update`) have real unit
+tests that run on any platform:
 
 ```bash
-go test ./internal/layout/... ./internal/config/... ./internal/state/... ./internal/applog/...
+go test ./internal/layout/... ./internal/config/... ./internal/state/... ./internal/applog/... ./internal/update/...
 ```
 
 Everything else is Windows-only by nature (raw syscalls, COM, a native

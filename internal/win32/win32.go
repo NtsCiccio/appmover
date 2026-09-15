@@ -19,7 +19,6 @@ var (
 
 	procGetWindowDpiAwarenessContext = user32.NewProc("GetWindowDpiAwarenessContext")
 	procAreDpiAwarenessContextsEqual = user32.NewProc("AreDpiAwarenessContextsEqual")
-	procGetDpiForWindow              = user32.NewProc("GetDpiForWindow")
 	procQueryFullProcessImageNameW   = syscall.NewLazyDLL("kernel32.dll").NewProc("QueryFullProcessImageNameW")
 
 	dwmapi                    = syscall.NewLazyDLL("dwmapi.dll")
@@ -205,16 +204,6 @@ func IsPerMonitorDPIAware(hwnd w32.HWND) bool {
 	}
 	equal, _, _ := procAreDpiAwarenessContextsEqual.Call(ctx, dpiAwarenessContextPerMonitorAwareV2)
 	return equal != 0
-}
-
-// GetDpiForWindow returns the DPI Windows is currently rendering the
-// window at, or (96, false) if the query fails (e.g. pre-Windows 10).
-func GetDpiForWindow(hwnd w32.HWND) (dpi uint32, ok bool) {
-	ret, _, _ := procGetDpiForWindow.Call(uintptr(hwnd))
-	if ret == 0 {
-		return 96, false
-	}
-	return uint32(ret), true
 }
 
 // ProcessExeName returns the base file name (e.g. "chrome.exe") of the
