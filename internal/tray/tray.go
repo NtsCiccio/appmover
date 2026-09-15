@@ -9,14 +9,18 @@ import (
 	"appmover/internal/movewindow"
 	"appmover/internal/msgloop"
 	"appmover/internal/state"
+	"appmover/internal/update"
 	"appmover/internal/vdesktop"
+	"appmover/internal/version"
 	"appmover/internal/win32"
 	"appmover/internal/winlist"
 	_ "embed"
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"fyne.io/systray"
@@ -37,9 +41,16 @@ const (
 // per-submenu click goroutines).
 var mu sync.RWMutex
 
+// updateURL is the release page to open when updateItem is clicked. It's
+// set once a background check finds a newer version and read from the
+// click handler goroutine, hence the atomic.Value rather than a plain
+// string guarded by mu (which is about unrelated state).
+var updateURL atomic.Value
+
 var (
 	quitItem      *systray.MenuItem
 	autostartItem *systray.MenuItem
+	updateItem    *systray.MenuItem // "Update available: vX.Y.Z", hidden until a check finds one
 	moreItem      *systray.MenuItem // "+N more windows not shown"
 
 	monitors      []win32.Monitor
@@ -139,6 +150,13 @@ func OnReady() {
 	}
 	autostartItem = systray.AddMenuItemCheckbox("Start with Windows", "Automatically start AppMover at login", enabled)
 	go handleAutostartToggle()
+
+	updateItem = systray.AddMenuItem("", "Open the release page to download it")
+	updateItem.Hide()
+	go handleUpdateClick()
+	if !cfg.DisableUpdateCheck {
+		go checkUpdatesLoop()
+	}
 
 	quitItem = systray.AddMenuItem("Quit", "Quit the application")
 
@@ -494,6 +512,45 @@ func handleAutostartToggle() {
 		}
 		autostartItem.Check()
 		logInfo("autostart: enabled")
+	}
+}
+
+// checkUpdatesLoop checks GitHub for a newer release once at startup, then
+// every 24h for as long as AppMover keeps running.
+func checkUpdatesLoop() {
+	checkForUpdate()
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+	for range ticker.C {
+		checkForUpdate()
+	}
+}
+
+func checkForUpdate() {
+	res, err := update.Check(version.Version)
+	if err != nil {
+		logInfo("update.Check: %v", err)
+		return
+	}
+	if !res.Available {
+		return
+	}
+
+	logInfo("update available: v%s (%s)", res.Version, res.URL)
+	updateURL.Store(res.URL)
+	updateItem.SetTitle(fmt.Sprintf("Update available: v%s", res.Version))
+	updateItem.Show()
+}
+
+func handleUpdateClick() {
+	for range updateItem.ClickedCh {
+		url, _ := updateURL.Load().(string)
+		if url == "" {
+			continue
+		}
+		if err := exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start(); err != nil {
+			logInfo("opening release page %s: %v", url, err)
+		}
 	}
 }
 

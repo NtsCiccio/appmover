@@ -38,6 +38,7 @@ type Config struct {
 	MaxWindowSlots        int      `json:"maxWindowSlots"`
 	ExcludedProcessNames  []string `json:"excludedProcessNames"`
 	ExcludedTitles        []string `json:"excludedTitles"`
+	DisableUpdateCheck    bool     `json:"disableUpdateCheck"`
 }
 
 // Default returns the settings AppMover ships with.
@@ -49,6 +50,7 @@ func Default() Config {
 		MaxWindowSlots:        20,
 		ExcludedProcessNames:  []string{},
 		ExcludedTitles:        []string{},
+		DisableUpdateCheck:    false,
 	}
 }
 

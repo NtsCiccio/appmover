@@ -39,6 +39,7 @@ preserved. No dragging across screens, no admin rights, no bloat.
 | 🖥️ **Virtual desktop awareness** | Windows that aren't on the currently active virtual desktop are filtered out, via the public `IVirtualDesktopManager` COM interface. |
 | 🔍 **Per-monitor DPI awareness** | AppMover declares Per-Monitor-V2 DPI awareness, so positions/sizes are computed in real physical pixels on mixed-DPI multi-monitor setups, with a size-scaling fallback for windows that aren't DPI-aware themselves. |
 | ⚡ **Event-driven refresh** | The window list updates via `SetWinEventHook`/`WM_DISPLAYCHANGE` rather than blind polling; a much longer poll (configurable, default 10s) remains only as a safety net. |
+| 🔔 **Update check** | At startup and every 24h, AppMover checks GitHub Releases for a newer version; if one exists, a "Update available: vX.Y.Z" entry appears in the tray menu and opens the release page when clicked. Only runs against tagged builds (see [Configuration](#configuration) to disable it). |
 
 ## Download
 
@@ -113,7 +114,8 @@ On first run AppMover creates a config file at
   "movePrevMonitorHotkey": "win+shift+left",
   "maxWindowSlots": 20,
   "excludedProcessNames": [],
-  "excludedTitles": []
+  "excludedTitles": [],
+  "disableUpdateCheck": false
 }
 ```
 
@@ -123,6 +125,7 @@ On first run AppMover creates a config file at
 | `moveNextMonitorHotkey` / `movePrevMonitorHotkey` | `modifier+...+key`, where modifiers are any of `win`/`ctrl`/`alt`/`shift` and the key is an arrow (`left`/`right`/`up`/`down`) or a single letter/digit. |
 | `maxWindowSlots` | How many window entries the tray menu pre-allocates; beyond that, a trailing "+N more windows not shown" entry appears instead of silently truncating the list. |
 | `excludedProcessNames` / `excludedTitles` | Case-insensitive substring filters, e.g. `"excludedProcessNames": ["chrome.exe"]`. |
+| `disableUpdateCheck` | Set to `true` to stop AppMover from calling the GitHub releases API to check for updates (see [Update check](#features)). |
 
 Edit the file and restart AppMover to apply changes. Per-app "last used
 monitor" memory is stored separately at `%AppData%\AppMover\state.json`.
@@ -155,6 +158,10 @@ monitor" memory is stored separately at `%AppData%\AppMover\state.json`.
 - `internal/config`, `internal/state`, `internal/applog` — JSON
   settings/memory persistence and the rotating debug log, pure Go, no
   Win32 dependency
+- `internal/update`, `internal/version` — checks GitHub Releases for a
+  newer version; `version.Version` is set at build time via `-ldflags -X`
+  (see `.github/workflows/release.yml`) and stays `"dev"` otherwise, which
+  disables the check
 - `installer/appmover.iss` — Inno Setup script for `AppMover-Setup.exe`
   (see [Download](#download))
 
