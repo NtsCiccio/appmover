@@ -47,6 +47,7 @@ OutputBaseFilename=AppMover-Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+AppMutex=AppMover-SingleInstance
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
